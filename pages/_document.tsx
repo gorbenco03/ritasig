@@ -12,7 +12,7 @@ class MyDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
           />
         </Head>
-        <body className="bg-[#C2F9BB]">
+        <body className="bg-[#FFFFFF]">
           <Main />
           <NextScript />
         </body>

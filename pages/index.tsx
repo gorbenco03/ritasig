@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import Forms from '../sections/forms/forms.section';
+import ConstrainedHeaderComponent from '../components/constrainedHeaderComponent';
+import FeatureSection from '../components/featureComponent';
+import Details from '../sections/details/details';
 
 export function Index() {
   return (
     <>
-      <Forms />
+      <ConstrainedHeaderComponent></ConstrainedHeaderComponent>
+      <Details></Details>
+      <FeatureSection />
     </>
   );
 }
