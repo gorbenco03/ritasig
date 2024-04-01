@@ -1,0 +1,56 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "iamandrewluca",
+      "name": "Andrew Luca",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1881266?v=4",
+      "profile": "https://iamandrewluca.com/",
+      "contributions": [
+        "code",
+        "doc",
+        "example",
+        "infra",
+        "maintenance"
+      ]
+    },
+    {
+      "login": "Raduc4",
+      "name": "Raduc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/55291600?v=4",
+      "profile": "https://github.com/Raduc4",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "andreivalcov",
+      "name": "Andrei Valcov",
+      "avatar_url": "https://avatars.githubusercontent.com/u/72382254?v=4",
+      "profile": "http://lunarboots.com",
+      "contributions": [
+        "design"
+      ]
+    },
+    {
+      "login": "ion-golovco",
+      "name": "ion-golovco",
+      "avatar_url": "https://avatars.githubusercontent.com/u/27897102?v=4",
+      "profile": "https://github.com/ion-golovco",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "catalog-profesii",
+  "projectOwner": "code4moldova",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
