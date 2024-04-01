@@ -8,6 +8,7 @@ export function Index() {
     <>
       <ConstrainedHeaderComponent></ConstrainedHeaderComponent>
       <Details></Details>
+
       <FeatureSection />
     </>
   );

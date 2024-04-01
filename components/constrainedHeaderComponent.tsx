@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 
 const navigation = [
-  { name: 'RCA', href: '#' },
-  { name: 'CASCO', href: '#' },
-  { name: 'CARTE VERDE', href: '#' },
+  { name: 'ACASA', href: '#' },
   { name: 'DESPRE NOI', href: '#' },
   { name: 'CONTACT', href: '#' },
 ];
