@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ConstrainedHeaderComponent from '../components/constrainedHeaderComponent';
 import FeatureSection from '../components/featureComponent';
 import Details from '../sections/details/details';
+import Footer from '../sections/footer/footer';
 
-export function Index() {
+const Index: React.FC = () => {
   return (
     <>
-      <ConstrainedHeaderComponent></ConstrainedHeaderComponent>
-      <Details></Details>
-
+      <ConstrainedHeaderComponent />
+      <Details />
       <FeatureSection />
+      <Footer />
     </>
   );
-}
+};
 
 export default Index;

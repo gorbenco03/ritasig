@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'ACASA', href: '#' },
@@ -7,7 +8,7 @@ const navigation = [
   { name: 'CONTACT', href: '#' },
 ];
 
-export default function ConstrainedHeaderComponent() {
+export default function Example() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -33,6 +34,7 @@ export default function ConstrainedHeaderComponent() {
             onClick={() => setMobileMenuOpen(true)}
           >
             <span className="sr-only">Open main menu</span>
+            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
         <div className="hidden lg:flex lg:gap-x-12">
@@ -48,7 +50,7 @@ export default function ConstrainedHeaderComponent() {
         </div>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           <a href="#" className="text-sm font-semibold leading-6 text-gray-900">
-            Log in <span aria-hidden="true">&rarr;</span>
+            Intra in Cont <span aria-hidden="true">&rarr;</span>
           </a>
         </div>
       </nav>
@@ -75,6 +77,7 @@ export default function ConstrainedHeaderComponent() {
               onClick={() => setMobileMenuOpen(false)}
             >
               <span className="sr-only">Close menu</span>
+              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
             </button>
           </div>
           <div className="mt-6 flow-root">
@@ -95,7 +98,7 @@ export default function ConstrainedHeaderComponent() {
                   href="#"
                   className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                 >
-                  Log in
+                  Intra in Cont
                 </a>
               </div>
             </div>

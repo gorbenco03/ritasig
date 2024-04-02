@@ -1,35 +1,34 @@
 import {
-  ChatBubbleOvalLeftEllipsisIcon,
-  HeartIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  CurrencyEuroIcon,
+  AcademicCapIcon,
+  AdjustmentsHorizontalIcon,
+  BoltIcon,
+  LockClosedIcon,
 } from '@heroicons/react/24/outline';
 
 const features = [
   {
-    name: 'Spam report',
+    name: 'Proces Simplificat de Solicitare',
     description:
-      'Autem reprehenderit aut debitis ut. Officiis harum omnis placeat blanditiis delectus sint vel et voluptatum. Labore asperiores non corporis molestiae.',
-    icon: TrashIcon,
+      'Platforma noastră folosește tehnologie de ultimă oră pentru a oferi un proces simplificat și intuitiv de solicitare a asigurărilor. Clientii pot completa rapid și ușor formularele online, economisind timp prețios.',
+    icon: BoltIcon,
   },
   {
-    name: 'Compose in markdown',
+    name: 'Personalizare și Flexibilitate ',
     description:
-      'Illum et aut inventore. Ut et dignissimos quasi. Omnis saepe dolorum. Hic autem fugiat. Voluptatem officiis necessitatibus est.',
-    icon: PencilSquareIcon,
+      'Înțelegem că nevoile de asigurare variază de la o persoană la alta. Platforma noastră permite utilizatorilor să personalizeze acoperirea asigurărilor în funcție de nevoile lor specifice, asigurând că primesc exact nivelul de protecție dorit.',
+    icon: AdjustmentsHorizontalIcon,
   },
   {
-    name: 'Confirmare prin email',
+    name: 'Suport Excepțional pentru Clienți',
     description:
-      'Vei primi asigurarea ta prin email intr-un timp foarte scurt. Nu mai e nevoie sa te loghezi in contul tau pentru a vedea informatii.',
-    icon: ChatBubbleOvalLeftEllipsisIcon,
+      'Ne mândrim cu o echipă dedicată de suport pentru clienți, gata să ajute cu orice întrebări sau probleme. Indiferent dacă clienții au nevoie de ajutor în procesul de solicitare, echipa noastră oferă răspunsuri prompte și eficiente, asigurând o experiență fără griji',
+    icon: AcademicCapIcon,
   },
   {
-    name: 'Cele mai avantajoase preturi',
+    name: 'Securitate și Încredere',
     description:
-      'Deserunt corrupti praesentium quo vel cupiditate est occaecati ad. Aperiam libero modi similique iure praesentium facilis quo cumque quibusdam.',
-    icon: CurrencyEuroIcon,
+      'Securitatea datelor este o prioritate absolută pentru noi. Platforma noastră utilizează cele mai avansate tehnologii de securitate pentru a proteja informațiile personale și financiare ale clienților.',
+    icon: LockClosedIcon,
   },
 ];
 
