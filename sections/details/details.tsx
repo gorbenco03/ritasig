@@ -181,7 +181,10 @@ const Details: React.FC = () => {
       </div>
 
       <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 w-full">
-        <h2 className="text-xl font-semibold mb-4">Informații Șofer</h2>
+        <h2 className="text-xl font-semibold mb-4 mt-8 text-center">
+          Informații Sofer
+        </h2>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {driverFields.map((field) => (
             <div key={field} className="mx-auto max-w-xs">
@@ -204,7 +207,10 @@ const Details: React.FC = () => {
             </div>
           ))}
         </div>
-        <h2 className="text-xl font-semibold mb-4 mt-8">Informații Mașină</h2>
+        <h2 className="text-xl text-center font-semibold mb-4 mt-8">
+          Informații Mașină
+        </h2>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {carFields.map((field) => (
             <div key={field} className="mx-auto max-w-xs">
