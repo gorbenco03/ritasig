@@ -5,9 +5,10 @@ import { CheckIcon } from '@heroicons/react/24/outline';
 interface InsurancePopOverProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: () => void; // Aceasta poate fi utilizată pentru acțiuni suplimentare la confirmare
   onCancel: () => void;
-  estimatedPrice: string;
+  onSubmit: () => void; // Funcția care va fi apelată pentru a trimite datele
+  estimatedPrice: string; // Prețul estimat pentru a fi afișat
 }
 
 const InsurancePopOver: React.FC<InsurancePopOverProps> = ({
@@ -15,9 +16,19 @@ const InsurancePopOver: React.FC<InsurancePopOverProps> = ({
   setOpen,
   onConfirm,
   onCancel,
+  onSubmit,
   estimatedPrice,
 }) => {
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleConfirm = async () => {
+    try {
+      await onSubmit(); // Apelăm funcția de trimitere a datelor
+      onConfirm(); // Apelăm funcția de confirmare, care poate include închiderea popover-ului sau alte acțiuni
+    } catch (error) {
+      console.error('A apărut o eroare:', error);
+    }
+  };
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -69,7 +80,7 @@ const InsurancePopOver: React.FC<InsurancePopOverProps> = ({
                   <button
                     type="button"
                     className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    onClick={onConfirm}
+                    onClick={handleConfirm}
                   >
                     Solicitare Asigurare
                   </button>

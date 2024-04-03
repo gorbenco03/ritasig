@@ -1,21 +1,100 @@
 import React, { useState } from 'react';
 import InsurancePopOver from '../../components/popOver';
 
-// Definirea tipurilor pentru opțiuni, dacă sunt necesare
-interface Option {
-  value: string;
-  label: string;
-}
-
 const Details: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({}); // Tipizare mai precisă pentru starea formularului
+  const [formData, setFormData] = useState<Record<string, any>>({});
   const [estimatedPrice, setEstimatedPrice] = useState<string>('');
   const [selectedInsuranceType, setSelectedInsuranceType] =
     useState<string>('');
   const [basePrice, setBasePrice] = useState<number>(0);
 
-  // Opțiunile rămân neschimbate
+  // Actualizare: Păstrăm datele separate pentru șofer și mașină încă de la început
+  const [driverData, setDriverData] = useState<Record<string, any>>({});
+  const [carData, setCarData] = useState<Record<string, any>>({});
+
+  const driverFields = [
+    'Nume',
+    'Prenume',
+    'CNP',
+    'DataNasterii',
+    'Permis de conducere',
+    'E-mail',
+    'Nr. de telefon',
+    'Categorie Bonus',
+  ];
+  const carFields = [
+    'Categoria Masinii',
+    'Numarul WIN',
+    'An Productie',
+    'Capacitate Cilindrica',
+    'Categorie Bonus',
+    'Nr Inmatriculare',
+    'Nr Certificat Inmatriculare',
+    'Norma de Poluare',
+    'Tip Combustibil',
+    'Perioada de asigurare',
+  ];
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    // Determinăm dacă inputul aparține șoferului sau mașinii și actualizăm starea corespunzătoare
+    if (driverFields.includes(name)) {
+      setDriverData({ ...driverData, [name]: value });
+    } else if (carFields.includes(name)) {
+      setCarData({ ...carData, [name]: value });
+    }
+
+    // Menținem formData actualizată pentru logica existentă (e.g., calculul prețului)
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Ajustăm submit-ul pentru a folosi direct datele pregătite
+  const submitDriverData = async () => {
+    // presupunem că endpoint-ul este /api/drivers pentru șoferi
+    const response = await fetch('http://localhost:5000/api/persons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(driverData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Eroare la trimiterea datelor despre șofer');
+    }
+
+    return response.json();
+  };
+
+  const submitCarData = async () => {
+    // presupunem că endpoint-ul este /api/cars pentru mașini
+    const response = await fetch('/api/cars', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(carData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Eroare la trimiterea datelor despre mașină');
+    }
+
+    return response.json();
+  };
+
+  const handleSubmit = async () => {
+    try {
+      await submitDriverData(); // Trimite mai întâi datele despre șofer
+      await submitCarData(); // Apoi trimite datele despre mașină
+
+      console.log('Ambele seturi de date au fost trimise cu succes.');
+      // Aici poți adăuga orice logică post-trimitere, cum ar fi afișarea unui mesaj de succes
+    } catch (error) {
+      console.error('A apărut o eroare la trimiterea datelor:', error.message);
+      // Aici poți gestiona erorile
+    }
+  };
+
   const options = {
     'Perioada de asigurare': ['1 an', '6 luni', '3 luni'],
     'Norma de Poluare': ['Euro 3', 'Euro 4', 'Euro 5', 'Euro 6'],
@@ -36,36 +115,6 @@ const Details: React.FC = () => {
       'ATV',
     ],
     'Categorie Bonus': Array.from({ length: 17 }, (_, i) => (i - 8).toString()),
-  };
-
-  const driverFields = [
-    'Nume',
-    'Prenume',
-    'CNP',
-    'Data Nasterii',
-    'Permis de conducere',
-    'E-mail',
-    'Nr. de telefon',
-  ];
-
-  const carFields = [
-    'Categoria Masinii',
-    'Numarul WIN',
-    'An Productie',
-    'Capacitate Cilindrica',
-    'Categorie Bonus',
-    'Nr Inmatriculare',
-    'Nr Certificat Inmatriculare',
-    'Norma de Poluare',
-    'Tip Combustibil',
-    'Perioada de asigurare',
-  ];
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
   };
 
   const selectInsuranceType = (type: string) => {
@@ -104,7 +153,7 @@ const Details: React.FC = () => {
       // Adaugă alte tipuri de combustibil după necesitate
     };
     // Calcul coeficient pentru vârsta conducătorului auto
-    const driverBirthDate = new Date(formData['Data Nasterii']);
+    const driverBirthDate = new Date(formData['DataNasterii']);
     const driverAge = new Date().getFullYear() - driverBirthDate.getFullYear();
     const driverAgeCoefficient =
       driverAge < 25 ? 1.2 : driverAge <= 60 ? 1.0 : 1.1;
@@ -148,7 +197,6 @@ const Details: React.FC = () => {
     setEstimatedPrice(`Preț estimat: ${price.toFixed(2)} RON`);
     setOpen(true);
   };
-
   const isActiveButton = (type: string) => selectedInsuranceType === type;
 
   return (
@@ -196,12 +244,12 @@ const Details: React.FC = () => {
               </label>
               <div className="mt-2">
                 <input
-                  type={field === 'Data Nasterii' ? 'date' : 'text'}
+                  type={field === 'DataNasterii' ? 'date' : 'text'}
                   name={field}
                   id={field}
                   onChange={handleInputChange}
                   className="block w-full rounded-md border-0 py-2 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  placeholder={field !== 'Data Nasterii' ? field : ''}
+                  placeholder={field !== 'DataNasterii' ? field : ''}
                 />
               </div>
             </div>
@@ -277,9 +325,10 @@ const Details: React.FC = () => {
         <InsurancePopOver
           open={open}
           setOpen={setOpen}
-          onConfirm={() => console.log('Confirm')}
+          onConfirm={() => console.log('Confirmare!')}
           onCancel={() => setOpen(false)}
-          estimatedPrice={estimatedPrice}
+          onSubmit={handleSubmit} // Pasăm funcția de submit ca prop
+          estimatedPrice={estimatedPrice} // Pasăm prețul estimat pentru a-l afișa în popover
         />
       </div>
     </div>
