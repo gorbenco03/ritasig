@@ -3,109 +3,56 @@ import InsurancePopOver from '../../components/popOver';
 
 const Details: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, any>>({
+    TipAsigurare: '',
+    Nume: '',
+    Prenume: '',
+    CNP: '',
+    DataNasterii: '',
+    PermisDeConducere: '',
+    Email: '',
+    NrDeTelefon: '',
+    CategoriaMasinii: '',
+    NumarulWIN: '',
+    AnProductie: '',
+    CapacitateCilindrica: '',
+    CategorieBonus: '',
+    NrInmatriculare: '',
+    NrCertificatInmatriculare: '',
+    NormaDePoluare: '',
+    TipCombustibil: '',
+    PerioadaDeAsigurare: '',
+  });
   const [estimatedPrice, setEstimatedPrice] = useState<string>('');
-  const [selectedInsuranceType, setSelectedInsuranceType] =
-    useState<string>('');
   const [basePrice, setBasePrice] = useState<number>(0);
-
-  // Actualizare: Păstrăm datele separate pentru șofer și mașină încă de la început
-  const [driverData, setDriverData] = useState<Record<string, any>>({});
-  const [carData, setCarData] = useState<Record<string, any>>({});
 
   const driverFields = [
     'Nume',
     'Prenume',
     'CNP',
     'DataNasterii',
-    'Permis de conducere',
-    'E-mail',
-    'Nr. de telefon',
-    'Categorie Bonus',
+    'PermisDeConducere',
+    'Email',
+    'NrDeTelefon',
   ];
   const carFields = [
-    'Categoria Masinii',
-    'Numarul WIN',
-    'An Productie',
-    'Capacitate Cilindrica',
-    'Categorie Bonus',
-    'Nr Inmatriculare',
-    'Nr Certificat Inmatriculare',
-    'Norma de Poluare',
-    'Tip Combustibil',
-    'Perioada de asigurare',
+    'CategoriaMasinii',
+    'NumarulWIN',
+    'AnProductie',
+    'CapacitateCilindrica',
+    'CategorieBonus',
+    'NrInmatriculare',
+    'NrCertificatInmatriculare',
+    'NormaDePoluare',
+    'TipCombustibil',
+    'PerioadaDeAsigurare',
   ];
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    // Determinăm dacă inputul aparține șoferului sau mașinii și actualizăm starea corespunzătoare
-    if (driverFields.includes(name)) {
-      setDriverData({ ...driverData, [name]: value });
-    } else if (carFields.includes(name)) {
-      setCarData({ ...carData, [name]: value });
-    }
-
-    // Menținem formData actualizată pentru logica existentă (e.g., calculul prețului)
-    setFormData({ ...formData, [name]: value });
-  };
-
-  // Ajustăm submit-ul pentru a folosi direct datele pregătite
-  const submitDriverData = async () => {
-    // presupunem că endpoint-ul este /api/drivers pentru șoferi
-    const response = await fetch('http://localhost:5000/api/persons', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(driverData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Eroare la trimiterea datelor despre șofer');
-    }
-
-    return response.json();
-  };
-
-  const submitCarData = async () => {
-    // presupunem că endpoint-ul este /api/cars pentru mașini
-    const response = await fetch('/api/cars', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(carData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Eroare la trimiterea datelor despre mașină');
-    }
-
-    return response.json();
-  };
-
-  const handleSubmit = async () => {
-    try {
-      await submitDriverData(); // Trimite mai întâi datele despre șofer
-      await submitCarData(); // Apoi trimite datele despre mașină
-
-      console.log('Ambele seturi de date au fost trimise cu succes.');
-      // Aici poți adăuga orice logică post-trimitere, cum ar fi afișarea unui mesaj de succes
-    } catch (error) {
-      console.error('A apărut o eroare la trimiterea datelor:', error.message);
-      // Aici poți gestiona erorile
-    }
-  };
-
   const options = {
-    'Perioada de asigurare': ['1 an', '6 luni', '3 luni'],
-    'Norma de Poluare': ['Euro 3', 'Euro 4', 'Euro 5', 'Euro 6'],
-    'Tip Combustibil': [
-      'Diesel',
-      'Benzina',
-      'Hibrid',
-      'Electric',
-      'Gaz-Benzina',
-    ],
-    'Categoria Masinii': [
+    PerioadaDeAsigurare: ['1 an', '6 luni', '3 luni'],
+    NormaDePoluare: ['Euro 3', 'Euro 4', 'Euro 5', 'Euro 6'],
+    TipCombustibil: ['Diesel', 'Benzina', 'Hibrid', 'Electric', 'Gaz-Benzina'],
+    CategoriaMasinii: [
       'Autoturism',
       'Camion',
       'Remorca',
@@ -114,55 +61,96 @@ const Details: React.FC = () => {
       'Motocicleta',
       'ATV',
     ],
-    'Categorie Bonus': Array.from({ length: 17 }, (_, i) => (i - 8).toString()),
+    CategorieBonus: Array.from({ length: 17 }, (_, i) => (i - 8).toString()),
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async () => {
+    console.log(formData);
+    try {
+      const response = await fetch('http://localhost:5000/api/insurance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          PretAsigurare: formData.PretAsigurare,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Eroare la trimiterea datelor');
+      }
+
+      console.log('Datele au fost trimise cu succes.');
+    } catch (error) {
+      console.error('A apărut o eroare la trimiterea datelor:', error.message);
+    }
   };
 
   const selectInsuranceType = (type: string) => {
-    setSelectedInsuranceType(type);
+    setFormData({ ...formData, TipAsigurare: type });
+
     const prices: Record<string, number> = {
       'RCA': 500,
       'CASCO': 750,
       'CARTE VERDE': 350,
     };
-    setBasePrice(prices[type] ?? 0); // Folosim ?? operator pentru a gestiona cazuri unde cheia nu există
+    setBasePrice(prices[type] ?? 0);
   };
 
   const calculateInsurancePrice = () => {
-    let price = basePrice; // Preț de bază
+    // Asigură-te că avem un preț de bază valid pentru calcul
+    let price = Number(basePrice);
+    if (isNaN(price)) {
+      alert('Prețul de bază este invalid.');
+      return;
+    }
+
     // Coeficienții pentru categoria mașinii
     const carCategoryCoefficients = {
       Autoturism: 1.0,
       Camion: 1.5,
       Motocicleta: 0.8,
-      // Adaugă alte categorii după necesitate
+      // Adaugă alte categorii conform necesităților
     };
-    // Calcul coeficient pentru categoria bonus
-    const bonusCategory = parseInt(formData['Categorie Bonus']);
+
+    // Extrage și validează categoria bonus ca număr
+    const bonusCategory = parseInt(formData['CategorieBonus'], 10);
     const bonusCategoryCoefficient =
       bonusCategory >= -8 && bonusCategory <= 8
         ? 1.0
         : bonusCategory > 8 && bonusCategory <= 15
         ? 0.9
         : 0.8;
+
     // Coeficienții pentru tipul de combustibil
     const fuelTypeCoefficients = {
       Diesel: 1.1,
       Benzina: 1.0,
       Electric: 0.8,
       Hibrid: 0.9,
-      // Adaugă alte tipuri de combustibil după necesitate
+      // Adaugă alte tipuri de combustibil conform necesităților
     };
-    // Calcul coeficient pentru vârsta conducătorului auto
+
+    // Calculează coeficientul pe baza vârstei conducătorului auto
     const driverBirthDate = new Date(formData['DataNasterii']);
     const driverAge = new Date().getFullYear() - driverBirthDate.getFullYear();
     const driverAgeCoefficient =
       driverAge < 25 ? 1.2 : driverAge <= 60 ? 1.0 : 1.1;
-    // Calcul coeficient pentru anul de producție al mașinii
-    const carProductionYear = parseInt(formData['An Productie']);
+
+    // Calculează coeficientul pe baza anului de producție al mașinii
+    const carProductionYear = parseInt(formData['AnProductie'], 10);
     const currentYear = new Date().getFullYear();
     const carAge = currentYear - carProductionYear;
     const carProductionYearCoefficient =
       carAge < 5 ? 0.9 : carAge <= 10 ? 1.0 : 1.1;
+
     // Coeficienții pentru norma de poluare
     const pollutionNormCoefficients = {
       'Euro 3': 1.1,
@@ -171,8 +159,8 @@ const Details: React.FC = () => {
       'Euro 6': 0.8,
     };
 
-    // Calcul coeficient pentru capacitatea cilindrică
-    const cylinderCapacity = parseInt(formData['Capacitate Cilindrica']);
+    // Calculează coeficientul pe baza capacității cilindrice
+    const cylinderCapacity = parseInt(formData['CapacitateCilindrica'], 10);
     const cylinderCapacityCoefficient =
       cylinderCapacity <= 1500 ? 0.9 : cylinderCapacity <= 2500 ? 1.0 : 1.1;
 
@@ -185,19 +173,25 @@ const Details: React.FC = () => {
 
     // Aplică coeficienții în calculul prețului
     price *=
-      carCategoryCoefficients[formData['Categoria Masinii']] *
+      (carCategoryCoefficients[formData['CategoriaMasinii']] || 1) *
       bonusCategoryCoefficient *
-      fuelTypeCoefficients[formData['Tip Combustibil']] *
+      (fuelTypeCoefficients[formData['TipCombustibil']] || 1) *
       driverAgeCoefficient *
       carProductionYearCoefficient *
-      pollutionNormCoefficients[formData['Norma de Poluare']] *
+      (pollutionNormCoefficients[formData['NormaDePoluare']] || 1) *
       cylinderCapacityCoefficient *
-      insurancePeriodCoefficients[formData['Perioada de asigurare']];
+      (insurancePeriodCoefficients[formData['PerioadaDeAsigurare']] || 1);
 
+    // Actualizează starea cu prețul calculat
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      PretAsigurare: price,
+    }));
     setEstimatedPrice(`Preț estimat: ${price.toFixed(2)} RON`);
-    setOpen(true);
+    setOpen(true); // Afișează popover-ul cu prețul estimat
   };
-  const isActiveButton = (type: string) => selectedInsuranceType === type;
+
+  const isActiveButton = (type: string) => formData.TipAsigurare === type;
 
   return (
     <div className="flex flex-col items-center mt-4">
