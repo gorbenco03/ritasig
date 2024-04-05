@@ -22,6 +22,7 @@ const Details: React.FC = () => {
     NormaDePoluare: '',
     TipCombustibil: '',
     PerioadaDeAsigurare: '',
+    StatusAsigurare: '',
   });
   const [estimatedPrice, setEstimatedPrice] = useState<string>('');
   const [basePrice, setBasePrice] = useState<number>(0);
@@ -48,7 +49,7 @@ const Details: React.FC = () => {
     'PerioadaDeAsigurare',
   ];
 
-  const options = {
+  const options: { [key: string]: string[] } = {
     PerioadaDeAsigurare: ['1 an', '6 luni', '3 luni'],
     NormaDePoluare: ['Euro 3', 'Euro 4', 'Euro 5', 'Euro 6'],
     TipCombustibil: ['Diesel', 'Benzina', 'Hibrid', 'Electric', 'Gaz-Benzina'],
@@ -89,7 +90,14 @@ const Details: React.FC = () => {
 
       console.log('Datele au fost trimise cu succes.');
     } catch (error) {
-      console.error('A apărut o eroare la trimiterea datelor:', error.message);
+      if (error instanceof Error) {
+        console.error(
+          'A apărut o eroare la trimiterea datelor:',
+          error.message
+        );
+      } else {
+        console.error('A apărut o eroare necunoscută');
+      }
     }
   };
 
@@ -113,7 +121,7 @@ const Details: React.FC = () => {
     }
 
     // Coeficienții pentru categoria mașinii
-    const carCategoryCoefficients = {
+    const carCategoryCoefficients: Record<string, number> = {
       Autoturism: 1.0,
       Camion: 1.5,
       Motocicleta: 0.8,
@@ -130,7 +138,7 @@ const Details: React.FC = () => {
         : 0.8;
 
     // Coeficienții pentru tipul de combustibil
-    const fuelTypeCoefficients = {
+    const fuelTypeCoefficients: Record<string, number> = {
       Diesel: 1.1,
       Benzina: 1.0,
       Electric: 0.8,
@@ -152,7 +160,7 @@ const Details: React.FC = () => {
       carAge < 5 ? 0.9 : carAge <= 10 ? 1.0 : 1.1;
 
     // Coeficienții pentru norma de poluare
-    const pollutionNormCoefficients = {
+    const pollutionNormCoefficients: Record<string, number> = {
       'Euro 3': 1.1,
       'Euro 4': 1.0,
       'Euro 5': 0.9,
@@ -165,7 +173,7 @@ const Details: React.FC = () => {
       cylinderCapacity <= 1500 ? 0.9 : cylinderCapacity <= 2500 ? 1.0 : 1.1;
 
     // Coeficienții pentru perioada de asigurare
-    const insurancePeriodCoefficients = {
+    const insurancePeriodCoefficients: Record<string, number> = {
       '1 an': 1.0,
       '6 luni': 1.05,
       '3 luni': 1.1,
@@ -274,24 +282,11 @@ const Details: React.FC = () => {
                     <option value="" disabled>
                       Selectează opțiunea
                     </option>
-                    {options[field].map(
-                      (
-                        option:
-                          | boolean
-                          | React.Key
-                          | React.ReactElement<
-                              any,
-                              string | React.JSXElementConstructor<any>
-                            >
-                          | React.ReactFragment
-                          | null
-                          | undefined
-                      ) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      )
-                    )}
+                    {options[field].map((option) => (
+                      <option key={String(option)} value={String(option)}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 ) : (
                   <input
