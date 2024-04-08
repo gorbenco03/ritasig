@@ -9,10 +9,14 @@ import {
   CogIcon,
   DocumentChartBarIcon,
   HomeIcon,
+  DocumentTextIcon, // Iconița pentru documente/text, folosită ca exemplu
+  DocumentArrowDownIcon,
   ScaleIcon,
   XMarkIcon,
   PaperClipIcon,
 } from '@heroicons/react/24/outline';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Insurance {
   _id: string; // Presupunând că mongoose adaugă automat un _id fiecărui document
@@ -66,7 +70,6 @@ export default function Example() {
           .slice()
           .map((activity: { DataSolicitarii: string | number | Date }) => ({
             ...activity,
-            DataSolicitarii: new Date(activity.DataSolicitarii),
           }));
         setRecentActivities(updatedData);
         const totalSum = updatedData.reduce(
@@ -109,7 +112,48 @@ export default function Example() {
     },
   ];
 
-  const handleApprove = async (_id: any) => {
+  const generatePDF = (insuranceData: Insurance) => {
+    const pdf = new jsPDF();
+
+    // Setează titlul documentului
+    pdf.setFontSize(16);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Detalii Asigurare', 20, 20);
+
+    // Resetarea fontului pentru corpul documentului
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'normal');
+
+    // Inițializarea poziției verticale pentru text
+    let verticalOffset = 30;
+
+    // Maparea și afișarea fiecărui câmp din obiectul asigurare
+    Object.entries(insuranceData).forEach(([key, value]) => {
+      // Excluderea afișării ID-ului în document
+      if (key === '__v') return;
+
+      // Verificarea și formatarea datelor de tip Date pentru afișare
+      let textValue = value;
+      if (value instanceof Date) {
+        textValue = value.toLocaleDateString();
+      }
+
+      const text = `${key}: ${textValue}`;
+      pdf.text(text, 20, verticalOffset);
+      verticalOffset += 10;
+
+      // Verificarea dacă am ajuns la sfârșitul paginii și adăugarea unei noi pagini dacă este necesar
+      if (verticalOffset > 280) {
+        pdf.addPage();
+        verticalOffset = 20; // Resetarea offset-ului vertical pentru pagina nouă
+      }
+    });
+
+    // Salvarea PDF-ului
+    pdf.save(`Detalii-Asigurare-${insuranceData._id}.pdf`);
+  };
+
+  const handleApprove = async (_id: string) => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/insurances/${_id}/status`,
@@ -124,7 +168,18 @@ export default function Example() {
 
       if (response.ok) {
         console.log('Approved successfully');
-        // Aici poți adăuga logica pentru a actualiza UI-ul sau state-ul după aprobare
+
+        // Actualizarea stării listei de asigurări pentru a reflecta modificarea
+        const updatedActivities = recentActivities.map((activity) => {
+          if (activity._id === _id) {
+            // Aici faci modificarea efectivă, actualizând starea asigurării
+            return { ...activity, StatusAsigurare: 'Acceptat' };
+          }
+          return activity;
+        });
+
+        // Setarea noii liste actualizate ca noua stare a componentei
+        setRecentActivities(updatedActivities);
       } else {
         console.error('Failed to approve');
       }
@@ -133,7 +188,7 @@ export default function Example() {
     }
   };
 
-  const handleReject = async (_id: any) => {
+  const handleReject = async (_id: string) => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/insurances/${_id}/status`,
@@ -148,7 +203,18 @@ export default function Example() {
 
       if (response.ok) {
         console.log('Rejected successfully');
-        // Aici poți adăuga logica pentru a actualiza UI-ul sau state-ul după respingere
+
+        // Actualizarea stării listei de asigurări pentru a reflecta modificarea
+        const updatedActivities = recentActivities.map((activity) => {
+          if (activity._id === _id) {
+            // Aici se face modificarea efectivă, actualizând starea asigurării la "Respins"
+            return { ...activity, StatusAsigurare: 'Respins' };
+          }
+          return activity;
+        });
+
+        // Setarea noii liste actualizate ca noua stare a componentei
+        setRecentActivities(updatedActivities);
       } else {
         console.error('Failed to reject');
       }
@@ -412,10 +478,10 @@ export default function Example() {
                               Pret Asigurare
                             </th>
                             <th className="bg-gray-50 px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                              Data solicitarii
+                              Extinde
                             </th>
                             <th className="bg-gray-50 px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                              Acțiuni
+                              Descarca PDF
                             </th>
                           </tr>
                         </thead>
@@ -430,7 +496,7 @@ export default function Example() {
                                   {activity.TipAsigurare}
                                 </td>
                                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
-                                  {activity.PretAsigurare} RON
+                                  {activity.PretAsigurare.toFixed(2)} RON
                                 </td>
 
                                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
@@ -447,6 +513,14 @@ export default function Example() {
                                     ) : (
                                       <ChevronDownIcon className="h-5 w-5" />
                                     )}
+                                  </button>
+                                </td>
+                                <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
+                                  <button
+                                    onClick={() => generatePDF(activity)}
+                                    className="inline-flex items-center text-cyan-600 hover:text-cyan-900"
+                                  >
+                                    <DocumentArrowDownIcon className="h-5 w-5" />
                                   </button>
                                 </td>
                               </tr>
@@ -626,7 +700,9 @@ export default function Example() {
                                               Pret Asigurare:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
-                                              {activity.PretAsigurare}
+                                              {activity.PretAsigurare.toFixed(
+                                                2
+                                              )}
                                             </td>
                                           </tr>
                                           <tr>
