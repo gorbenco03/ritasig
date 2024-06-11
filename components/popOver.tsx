@@ -1,4 +1,4 @@
-import React, { Fragment, useRef } from 'react';
+import React, { Fragment, useRef, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { CheckIcon } from '@heroicons/react/24/outline';
 
@@ -20,11 +20,17 @@ const InsurancePopOver: React.FC<InsurancePopOverProps> = ({
   estimatedPrice,
 }) => {
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
 
   const handleConfirm = async () => {
     try {
       await onSubmit(); // Apelăm funcția de trimitere a datelor
-      onConfirm(); // Apelăm funcția de confirmare, care poate include închiderea popover-ului sau alte acțiuni
+      setShowConfirmationMessage(true); // Afișăm mesajul de confirmare
+      setTimeout(() => {
+        setShowConfirmationMessage(false);
+        setOpen(false); // Închidem popover-ul după 5 secunde
+        onConfirm(); // Apelăm funcția de confirmare, care poate include închiderea popover-ului sau alte acțiuni
+      }, 5000);
     } catch (error) {
       console.error('A apărut o eroare:', error);
     }
@@ -74,25 +80,31 @@ const InsurancePopOver: React.FC<InsurancePopOverProps> = ({
                     </p>
                   </div>
                 </div>
-                <div className="mt-5 sm:mt-6 space-x-3 text-right">
-                  <p className="text-lg leading-6 font-medium text-gray-900"></p>{' '}
-                  {/* Afișează prețul estimat aici */}
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    onClick={handleConfirm}
-                  >
-                    Solicitare Asigurare
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    onClick={onCancel}
-                    ref={cancelButtonRef}
-                  >
-                    Cancel
-                  </button>
-                </div>
+                {showConfirmationMessage ? (
+                  <div className="mt-4 text-center text-green-600">
+                    Solicitarea a fost trimisa.
+                  </div>
+                ) : (
+                  <div className="mt-5 sm:mt-6 space-x-3 text-right">
+                    <p className="text-lg leading-6 font-medium text-gray-900"></p>{' '}
+                    {/* Afișează prețul estimat aici */}
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      onClick={handleConfirm}
+                    >
+                      Solicitare Asigurare
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      onClick={onCancel}
+                      ref={cancelButtonRef}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </Dialog.Panel>
             </Transition.Child>
           </div>

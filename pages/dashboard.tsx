@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Fragment } from 'react';
-import { Dialog, Menu, Transition } from '@headlessui/react';
+import { Dialog, Transition } from '@headlessui/react';
 import {
   Bars3CenterLeftIcon,
   ChevronDownIcon,
@@ -9,17 +9,13 @@ import {
   CogIcon,
   DocumentChartBarIcon,
   HomeIcon,
-  DocumentTextIcon, // Iconița pentru documente/text, folosită ca exemplu
-  DocumentArrowDownIcon,
   ScaleIcon,
   XMarkIcon,
   PaperClipIcon,
 } from '@heroicons/react/24/outline';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface Insurance {
-  _id: string; // Presupunând că mongoose adaugă automat un _id fiecărui document
+  _id: string;
   Nume: string;
   Prenume: string;
   CNP: number;
@@ -27,7 +23,9 @@ interface Insurance {
   PermisDeConducere: string;
   Email: string;
   NrDeTelefon: string;
-  CategorieBonus: number;
+  Adresa: string;
+  MarcaMasinii: string;
+  Modelul: string;
   CategoriaMasinii: string;
   NumarulWIN: string;
   AnProductie: number;
@@ -40,6 +38,9 @@ interface Insurance {
   TipAsigurare: string;
   PretAsigurare: number;
   StatusAsigurare: string;
+  NumarSerie: string;
+  DataInceput: Date;
+  DataSfarsit: Date;
 }
 
 const navigation = [
@@ -55,9 +56,7 @@ function classNames(...classes: string[]) {
 export default function Example() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [recentActivities, setRecentActivities] = useState<Insurance[]>([]);
-
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
   const [totalSum, setTotalSum] = useState(0);
 
   useEffect(() => {
@@ -66,17 +65,12 @@ export default function Example() {
         const response = await fetch('http://localhost:5000/api/insurances');
         const data = await response.json();
 
-        const updatedData = data
-          .slice()
-          .map((activity: { DataSolicitarii: string | number | Date }) => ({
-            ...activity,
-          }));
-        setRecentActivities(updatedData);
-        const totalSum = updatedData.reduce(
+        setRecentActivities(data);
+        const totalSum = data.reduce(
           (acc: any, curr: { PretAsigurare: any }) => acc + curr.PretAsigurare,
-          0
+          0,
         );
-        setTotalSum(totalSum); // Asigură-te că ai acest state definit în componentă
+        setTotalSum(totalSum);
       } catch (error) {
         console.error('Failed to fetch insurances:', error);
       }
@@ -88,7 +82,7 @@ export default function Example() {
   const pendingInsurancesCount = recentActivities.filter(
     (activity) =>
       activity.StatusAsigurare !== 'Acceptat' &&
-      activity.StatusAsigurare !== 'Respins'
+      activity.StatusAsigurare !== 'Respins',
   ).length;
 
   const cards = [
@@ -102,7 +96,7 @@ export default function Example() {
       name: 'Asigurari in asteptare',
       href: '#',
       icon: ClockIcon,
-      amount: `${pendingInsurancesCount}`, // Utilizează variabila calculată
+      amount: `${pendingInsurancesCount}`,
     },
     {
       name: 'Total asigurari',
@@ -111,47 +105,6 @@ export default function Example() {
       amount: `${recentActivities.length}`,
     },
   ];
-
-  const generatePDF = (insuranceData: Insurance) => {
-    const pdf = new jsPDF();
-
-    // Setează titlul documentului
-    pdf.setFontSize(16);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Detalii Asigurare', 20, 20);
-
-    // Resetarea fontului pentru corpul documentului
-    pdf.setFontSize(12);
-    pdf.setFont(undefined, 'normal');
-
-    // Inițializarea poziției verticale pentru text
-    let verticalOffset = 30;
-
-    // Maparea și afișarea fiecărui câmp din obiectul asigurare
-    Object.entries(insuranceData).forEach(([key, value]) => {
-      // Excluderea afișării ID-ului în document
-      if (key === '__v') return;
-
-      // Verificarea și formatarea datelor de tip Date pentru afișare
-      let textValue = value;
-      if (value instanceof Date) {
-        textValue = value.toLocaleDateString();
-      }
-
-      const text = `${key}: ${textValue}`;
-      pdf.text(text, 20, verticalOffset);
-      verticalOffset += 10;
-
-      // Verificarea dacă am ajuns la sfârșitul paginii și adăugarea unei noi pagini dacă este necesar
-      if (verticalOffset > 280) {
-        pdf.addPage();
-        verticalOffset = 20; // Resetarea offset-ului vertical pentru pagina nouă
-      }
-    });
-
-    // Salvarea PDF-ului
-    pdf.save(`Detalii-Asigurare-${insuranceData._id}.pdf`);
-  };
 
   const handleApprove = async (_id: string) => {
     try {
@@ -163,23 +116,19 @@ export default function Example() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ status: 'Acceptat' }),
-        }
+        },
       );
 
       if (response.ok) {
-        console.log('Approved successfully');
-
-        // Actualizarea stării listei de asigurări pentru a reflecta modificarea
+        const updatedInsurance = await response.json();
         const updatedActivities = recentActivities.map((activity) => {
           if (activity._id === _id) {
-            // Aici faci modificarea efectivă, actualizând starea asigurării
-            return { ...activity, StatusAsigurare: 'Acceptat' };
+            return { ...activity, ...updatedInsurance };
           }
           return activity;
         });
-
-        // Setarea noii liste actualizate ca noua stare a componentei
         setRecentActivities(updatedActivities);
+        console.log('Approved successfully');
       } else {
         console.error('Failed to approve');
       }
@@ -198,29 +147,57 @@ export default function Example() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ status: 'Respins' }),
-        }
+        },
       );
 
       if (response.ok) {
-        console.log('Rejected successfully');
-
-        // Actualizarea stării listei de asigurări pentru a reflecta modificarea
+        const updatedInsurance = await response.json();
         const updatedActivities = recentActivities.map((activity) => {
           if (activity._id === _id) {
-            // Aici se face modificarea efectivă, actualizând starea asigurării la "Respins"
-            return { ...activity, StatusAsigurare: 'Respins' };
+            return { ...activity, ...updatedInsurance };
           }
           return activity;
         });
-
-        // Setarea noii liste actualizate ca noua stare a componentei
         setRecentActivities(updatedActivities);
+        console.log('Rejected successfully');
       } else {
         console.error('Failed to reject');
       }
     } catch (error) {
       console.error('Error:', error);
     }
+  };
+
+  const handleGenerateInvoice = async (_id: string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/insurances/${_id}/generate-invoice`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (response.ok) {
+        const invoice = await response.json();
+        console.log('Invoice generated successfully', invoice);
+        // Handle the invoice data (e.g., show a download link)
+      } else {
+        console.error('Failed to generate invoice');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleDownloadPDF = (_id: string) => {
+    const link = document.createElement('a');
+    link.href = `http://localhost:5000/api/insurances/${_id}/download-pdf`;
+    link.target = '_blank';
+    link.download = `Insurance_${_id}.pdf`;
+    link.click();
   };
 
   return (
@@ -279,13 +256,7 @@ export default function Example() {
                       </button>
                     </div>
                   </Transition.Child>
-                  <div className="flex flex-shrink-0 items-center px-4">
-                    {/* <img
-                      className="h-8 w-auto"
-                      src="https://tailwindui.com/img/logos/mark.svg?color=cyan&shade=300"
-                      alt="Easywire logo"
-                    /> */}
-                  </div>
+                  <div className="flex flex-shrink-0 items-center px-4"></div>
                   <nav
                     className="mt-5 h-full flex-shrink-0 divide-y divide-cyan-800 overflow-y-auto"
                     aria-label="Sidebar"
@@ -299,7 +270,7 @@ export default function Example() {
                             item.current
                               ? 'bg-cyan-800 text-white'
                               : 'text-cyan-100 hover:bg-cyan-600 hover:text-white',
-                            'group flex items-center rounded-md px-2 py-2 text-base font-medium'
+                            'group flex items-center rounded-md px-2 py-2 text-base font-medium',
                           )}
                           aria-current={item.current ? 'page' : undefined}
                         >
@@ -331,24 +302,14 @@ export default function Example() {
                   </nav>
                 </Dialog.Panel>
               </Transition.Child>
-              <div className="w-14 flex-shrink-0" aria-hidden="true">
-                {/* Dummy element to force sidebar to shrink to fit close icon */}
-              </div>
+              <div className="w-14 flex-shrink-0" aria-hidden="true"></div>
             </div>
           </Dialog>
         </Transition.Root>
 
-        {/* Static sidebar for desktop */}
         <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-          {/* Sidebar component, swap this element with another sidebar if you like */}
           <div className="flex flex-grow flex-col overflow-y-auto bg-cyan-700 pb-4 pt-5">
-            <div className="flex flex-shrink-0 items-center px-4">
-              {/* <img
-                className="h-8 w-auto"
-                src="https://tailwindui.com/img/logos/mark.svg?color=cyan&shade=300"
-                alt="Easywire logo"
-              /> */}
-            </div>
+            <div className="flex flex-shrink-0 items-center px-4"></div>
             <nav
               className="mt-5 flex flex-1 flex-col divide-y divide-cyan-800 overflow-y-auto"
               aria-label="Sidebar"
@@ -362,7 +323,7 @@ export default function Example() {
                       item.current
                         ? 'bg-cyan-800 text-white'
                         : 'text-cyan-100 hover:bg-cyan-600 hover:text-white',
-                      'group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6'
+                      'group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6',
                     )}
                     aria-current={item.current ? 'page' : undefined}
                   >
@@ -405,17 +366,14 @@ export default function Example() {
               <span className="sr-only">Open sidebar</span>
               <Bars3CenterLeftIcon className="h-6 w-6" aria-hidden="true" />
             </button>
-            {/* Search bar */}
           </div>
           <main className="flex-1 pb-8">
-            {/* Page header */}
             <div className="mt-8">
               <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <h2 className="text-lg font-medium leading-6 text-gray-900">
                   Overview
                 </h2>
                 <div className="mt-2 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {/* Card */}
                   {cards.map((card) => (
                     <div
                       key={card.name}
@@ -460,7 +418,6 @@ export default function Example() {
               <h2 className="mx-auto mt-8 max-w-6xl px-4 text-lg font-medium leading-6 text-gray-900 sm:px-6 lg:px-8">
                 Recent activity
               </h2>
-              {/* Activity table (small breakpoint and up) */}
               <div className="hidden sm:block">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                   <div className="mt-2 flex flex-col">
@@ -480,9 +437,6 @@ export default function Example() {
                             <th className="bg-gray-50 px-6 py-3 text-right text-sm font-semibold text-gray-900">
                               Extinde
                             </th>
-                            <th className="bg-gray-50 px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                              Descarca PDF
-                            </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
@@ -498,12 +452,11 @@ export default function Example() {
                                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
                                   {activity.PretAsigurare.toFixed(2)} RON
                                 </td>
-
                                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
                                   <button
                                     onClick={() =>
                                       setSelectedIndex(
-                                        index === selectedIndex ? null : index
+                                        index === selectedIndex ? null : index,
                                       )
                                     }
                                     className="inline-flex items-center text-cyan-600 hover:text-cyan-900"
@@ -515,19 +468,11 @@ export default function Example() {
                                     )}
                                   </button>
                                 </td>
-                                <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
-                                  <button
-                                    onClick={() => generatePDF(activity)}
-                                    className="inline-flex items-center text-cyan-600 hover:text-cyan-900"
-                                  >
-                                    <DocumentArrowDownIcon className="h-5 w-5" />
-                                  </button>
-                                </td>
                               </tr>
                               {selectedIndex === index && (
                                 <tr>
                                   <td
-                                    colSpan={5}
+                                    colSpan={4}
                                     className="bg-gray-50 px-6 py-4"
                                   >
                                     <div className="text-sm text-gray-900 font-medium">
@@ -536,7 +481,7 @@ export default function Example() {
                                     <div className="mt-2">
                                       <table className="min-w-full divide-y divide-gray-200">
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                          {/* Fiecare rând reprezintă o pereche cheie-valoare din modelul tău */}
+                                          {/* Details of the insurance request */}
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
                                               Nume:
@@ -567,7 +512,7 @@ export default function Example() {
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
                                               {new Date(
-                                                activity.DataNasterii
+                                                activity.DataNasterii,
                                               ).toLocaleDateString()}
                                             </td>
                                           </tr>
@@ -597,15 +542,31 @@ export default function Example() {
                                           </tr>
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
-                                              Categorie Bonus:
+                                              Adresa:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
-                                              {activity.CategorieBonus}
+                                              {activity.Adresa}
                                             </td>
                                           </tr>
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
-                                              Categoria masinii:
+                                              Marca Mașinii:
+                                            </td>
+                                            <td className="px-2 py-2 text-gray-900">
+                                              {activity.MarcaMasinii}
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td className="px-2 py-2 text-gray-500">
+                                              Modelul:
+                                            </td>
+                                            <td className="px-2 py-2 text-gray-900">
+                                              {activity.Modelul}
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td className="px-2 py-2 text-gray-500">
+                                              Categoria mașinii:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
                                               {activity.CategoriaMasinii}
@@ -621,7 +582,7 @@ export default function Example() {
                                           </tr>
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
-                                              An productie:
+                                              An producție:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
                                               {activity.AnProductie}
@@ -629,15 +590,7 @@ export default function Example() {
                                           </tr>
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
-                                              Categorie Bonus:
-                                            </td>
-                                            <td className="px-2 py-2 text-gray-900">
-                                              {activity.CategorieBonus}
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td className="px-2 py-2 text-gray-500">
-                                              Capacitate Cilindrica:
+                                              Capacitate Cilindrică:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
                                               {activity.CapacitateCilindrica}
@@ -645,17 +598,15 @@ export default function Example() {
                                           </tr>
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
-                                              Numar inamtriculare:
+                                              Număr înmatriculare:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
-                                              {
-                                                activity.NrCertificatInmatriculare
-                                              }
+                                              {activity.NrInmatriculare}
                                             </td>
                                           </tr>
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
-                                              Certificat de inmatriculare:
+                                              Certificat de înmatriculare:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
                                               {
@@ -697,11 +648,31 @@ export default function Example() {
                                           </tr>
                                           <tr>
                                             <td className="px-2 py-2 text-gray-500">
+                                              Data Început:
+                                            </td>
+                                            <td className="px-2 py-2 text-gray-900">
+                                              {new Date(
+                                                activity.DataInceput,
+                                              ).toLocaleDateString()}
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td className="px-2 py-2 text-gray-500">
+                                              Data Sfârșit:
+                                            </td>
+                                            <td className="px-2 py-2 text-gray-900">
+                                              {new Date(
+                                                activity.DataSfarsit,
+                                              ).toLocaleDateString()}
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td className="px-2 py-2 text-gray-500">
                                               Pret Asigurare:
                                             </td>
                                             <td className="px-2 py-2 text-gray-900">
                                               {activity.PretAsigurare.toFixed(
-                                                2
+                                                2,
                                               )}
                                             </td>
                                           </tr>
@@ -713,7 +684,14 @@ export default function Example() {
                                               {activity.StatusAsigurare}
                                             </td>
                                           </tr>
-                                          {/* Continuă să adaugi restul detaliilor în acest format */}
+                                          <tr>
+                                            <td className="px-2 py-2 text-gray-500">
+                                              Numar Serie:
+                                            </td>
+                                            <td className="px-2 py-2 text-gray-900">
+                                              {activity.NumarSerie}
+                                            </td>
+                                          </tr>
                                         </tbody>
                                       </table>
                                       <div className="mt-4 flex justify-end space-x-3">
@@ -734,6 +712,29 @@ export default function Example() {
                                           Respinge
                                         </button>
                                       </div>
+                                      {activity.StatusAsigurare ===
+                                        'Acceptat' && (
+                                        <div className="mt-4 flex justify-end space-x-3">
+                                          <button
+                                            onClick={() =>
+                                              handleGenerateInvoice(
+                                                activity._id,
+                                              )
+                                            }
+                                            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                          >
+                                            Generează Factura
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              handleDownloadPDF(activity._id)
+                                            }
+                                            className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                          >
+                                            Descarcă PDF
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>
