@@ -2,9 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import InsurancePopOver from '../../components/popOver';
 
+type FormDataType = {
+  TipAsigurare: string;
+  Nume: string;
+  Prenume: string;
+  CNP: string;
+  DataNasterii: string;
+  PermisDeConducere: string;
+  Email: string;
+  NrDeTelefon: string;
+  Adresa: string;
+  MarcaMasinii: string;
+  Modelul: string;
+  CategoriaMasinii: string;
+  NumarulWIN: string;
+  AnProductie: string;
+  CapacitateCilindrica: string;
+  CategorieBonus: string;
+  NrInmatriculare: string;
+  NrCertificatInmatriculare: string;
+  NormaDePoluare: string;
+  TipCombustibil: string;
+  PerioadaDeAsigurare: string;
+  StatusAsigurare: string;
+  PretAsigurare?: number;
+};
+
 const Details: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({
+  const [formData, setFormData] = useState<FormDataType>({
     TipAsigurare: '',
     Nume: '',
     Prenume: '',
@@ -74,7 +100,7 @@ const Details: React.FC = () => {
     'Perioada De Asigurare': 'PerioadaDeAsigurare',
   };
 
-  const options: { [key: string]: string[] | { [key: string]: string[] } } = {
+  const options: Record<string, string[] | Record<string, string[]>> = {
     'Marca Masinii': [
       'BMW',
       'Mercedes',
@@ -157,12 +183,14 @@ const Details: React.FC = () => {
 
     // Generare număr unic de serie folosind UUID
     const generateUniqueNumber = () => {
-      const prefix = {
+      const prefix: Record<string, string> = {
         'RCA': 'RCA',
         'CASCO': 'CAS',
         'CARTE VERDE': 'CV',
-      }[formData.TipAsigurare];
-      return `${prefix}-${uuidv4()}`;
+      };
+
+      const insuranceType = formData.TipAsigurare as keyof typeof prefix;
+      return `${prefix[insuranceType]}-${uuidv4()}`;
     };
 
     const requestData = {
@@ -212,14 +240,14 @@ const Details: React.FC = () => {
     // Verifică dacă toate câmpurile sunt completate
     driverFields.forEach((field) => {
       const formDataFieldName = fieldMapping[field] || field;
-      if (!formData[formDataFieldName]) {
+      if (!(formData as any)[formDataFieldName]) {
         missingFields.push(field);
       }
     });
 
     carFields.forEach((field) => {
       const formDataFieldName = fieldMapping[field] || field;
-      if (!formData[formDataFieldName]) {
+      if (!(formData as any)[formDataFieldName]) {
         missingFields.push(field);
       }
     });
@@ -249,7 +277,7 @@ const Details: React.FC = () => {
     };
 
     // Extrage și validează categoria bonus ca număr
-    const bonusCategory = parseInt(formData['Categorie Bonus'], 10);
+    const bonusCategory = parseInt(formData['CategorieBonus'], 10);
     const bonusCategoryCoefficient =
       bonusCategory >= -8 && bonusCategory <= 8
         ? 1.0
@@ -422,7 +450,7 @@ const Details: React.FC = () => {
                 {field}
               </label>
               <div className="mt-2">
-                {options[field] ? (
+                {Array.isArray(options[field]) ? (
                   <select
                     id={field}
                     name={field}
@@ -433,30 +461,22 @@ const Details: React.FC = () => {
                     <option value="" disabled>
                       Selectează opțiunea
                     </option>
-                    {Array.isArray(options[field])
-                      ? options[field].map((option: any) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))
-                      : formData['MarcaMasinii'] &&
-                        options['Modelul'][formData['MarcaMasinii']]?.map(
-                          (option: any) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ),
-                        )}
+                    {Array.isArray(options) &&
+                      options.map((option: any) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
                   </select>
                 ) : (
-                  <input
-                    type="text"
-                    name={field}
-                    id={field}
-                    onChange={handleInputChange}
-                    className="block w-full rounded-md border-0 py-2 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    placeholder={field}
-                  />
+                  formData['MarcaMasinii'] &&
+                  (options['Modelul'] as Record<string, string[]>)[
+                    formData['MarcaMasinii']
+                  ]?.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))
                 )}
               </div>
             </div>
